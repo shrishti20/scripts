@@ -1,6 +1,8 @@
 const uswap = require('./uSwapRouter');
 const jmswap = require('./jmSwapRouter');
 const ssswap = require('./socialSwapRouter');
+const sunSwapFactory = require('./sunSwapFactroy')
+const sunSwapExchange = require('./sunSwapExchange')
 const TronWeb = require('tronweb');
 
 const HttpProvider = TronWeb.providers.HttpProvider;
@@ -13,6 +15,8 @@ const tronWeb = new TronWeb(fullNode, solidityNode, eventServer, privateKey);
 let token1 = "TNUC9Qb1rRpS5CbWLmNMxXBjyFoydXjWFR";
 let token2 = "TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t";
 let deadAddress = "T9yD14Nj9j7xAB4dbGeiX9h8unkKHxuWwb";
+const sst = "TBLQs7LqUYAgzYirNtaiX3ixnCKnhrVVCe";
+const Wtrx = "TNUC9Qb1rRpS5CbWLmNMxXBjyFoydXjWFR"
 let amount = "100000000";
 
 const factoryABI = [{"inputs":[{"internalType":"address","name":"_feeToSetter","type":"address"}],"payable":false,"stateMutability":"nonpayable","type":"constructor"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"token0","type":"address"},{"indexed":true,"internalType":"address","name":"token1","type":"address"},{"indexed":false,"internalType":"address","name":"pair","type":"address"},{"indexed":false,"internalType":"uint256","name":"index","type":"uint256"}],"name":"PairCreated","type":"event"},{"constant":true,"inputs":[{"internalType":"uint256","name":"","type":"uint256"}],"name":"allPairs","outputs":[{"internalType":"address","name":"","type":"address"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[],"name":"allPairsLength","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":false,"inputs":[{"internalType":"address","name":"tokenA","type":"address"},{"internalType":"address","name":"tokenB","type":"address"}],"name":"createPair","outputs":[{"internalType":"address","name":"pair","type":"address"}],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":true,"inputs":[],"name":"feeTo","outputs":[{"internalType":"address","name":"","type":"address"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[],"name":"feeToSetter","outputs":[{"internalType":"address","name":"","type":"address"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[{"internalType":"address","name":"tokenA","type":"address"},{"internalType":"address","name":"tokenB","type":"address"}],"name":"getPair","outputs":[{"internalType":"address","name":"pair","type":"address"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[{"internalType":"address","name":"","type":"address"},{"internalType":"address","name":"","type":"address"}],"name":"pairs","outputs":[{"internalType":"address","name":"","type":"address"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":false,"inputs":[{"internalType":"address","name":"_feeTo","type":"address"}],"name":"setFeeTo","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[{"internalType":"address","name":"_feeToSetter","type":"address"}],"name":"setFeeToSetter","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"}]
@@ -25,6 +29,8 @@ const jmrouterCcontract = tronWeb.contract(jmswap.abi, jmswap.routerAddress);
 
 const ssfactorContract = tronWeb.contract(factoryABI, ssswap.factoryAddress);
 const ssrouterCcontract = tronWeb.contract(ssswap.abi, ssswap.routerAddress);
+
+const SunSwapfactorContract = tronWeb.contract(sunSwapFactory.abi, sunSwapFactory.sunSwapFactoryAddress);
 
 async function main(){
    const isUPair = await ufactorContract.methods.getPair(token1,token2).call()
@@ -50,6 +56,17 @@ async function main(){
    }
    else{
        console.log("pair does not exits on ssswap")
+   }
+
+   if(token1 == Wtrx || token2 == Wtrx){
+       const notWtrx = token1 == Wtrx? token2:token1;
+       const exchange = await SunSwapfactorContract.methods.getExchange(notWtrx).call()
+       const exChangeContract = tronWeb.contract(sunSwapExchange.abi,tronWeb.address.fromHex(exchange))
+       const price = await exChangeContract.methods.getTrxToTokenInputPrice(amount).call()
+       console.log(price.toString(),"ssswap");
+   }
+   else{
+       console.log("pair does not exits on Sun Swap")
    }
 }
 
